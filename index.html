@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plugga Historia 🏛️</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">📚 Historia-provet 🏛️</div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="goTo('info', this)">📖 Allt innehåll</div>
+    <div class="nav-tab" onclick="goTo('flash', this)">🃏 Flashcards</div>
+    <div class="nav-tab" onclick="goTo('ovning', this)">✏️ Övning</div>
+  </div>
+</nav>
+
+<!-- PAGE 1: INFO -->
+<div class="page active" id="page-info">
+  <h1 class="page-title">Allt du behöver veta</h1>
+  <p class="page-sub">Klicka på ett ämne för att expandera det. Lägg till egna avsnitt med knappen nedan.</p>
+  <div id="sections-list"></div>
+  <button class="add-btn" onclick="openModal()">+ Lägg till avsnitt</button>
+</div>
+
+<!-- PAGE 2: FLASHCARDS -->
+<div class="page" id="page-flash">
+  <h1 class="page-title">Flashcards</h1>
+  <p class="page-sub">Klicka på kortet för att vända det. Försök svara innan du vänder!</p>
+  <div class="fc-controls">
+    <select id="fc-filter" onchange="initFlash()">
+      <option value="all">Alla ämnen</option>
+    </select>
+    <button class="fc-btn secondary" onclick="initFlash()">🔀 Blanda</button>
+    <button class="add-btn" style="margin:0" onclick="openCardModal()">+ Nytt kort</button>
+  </div>
+  <div class="score-bar">
+    <span class="score-label">Träffsäkerhet</span>
+    <div class="score-track"><div class="score-fill" id="fc-fill" style="width:0%"></div></div>
+    <span class="score-num" id="fc-score-txt">–</span>
+  </div>
+  <div class="fc-progress" id="fc-progress">Kort 0 av 0</div>
+  <div class="fc-wrap">
+    <div class="fc-card-inner" id="fc-inner" onclick="flipCard()">
+      <div class="fc-face front" id="fc-front">
+        <div class="tag">Fråga</div>
+        <div class="q" id="fc-q">Välj ett ämne och börja!</div>
+        <div class="hint">Klicka för att vända</div>
+      </div>
+      <div class="fc-face back" id="fc-back">
+        <div class="tag">Svar</div>
+        <div class="q" id="fc-a">–</div>
+      </div>
+    </div>
+  </div>
+  <div class="fc-nav">
+    <button class="fc-btn secondary" onclick="fcNav(-1)">← Föregående</button>
+    <button class="fc-btn" onclick="markCorrect(true)">✓ Kunde</button>
+    <button class="fc-btn secondary" onclick="markCorrect(false)">✗ Kunde inte</button>
+    <button class="fc-btn secondary" onclick="fcNav(1)">Nästa →</button>
+  </div>
+  <div id="fc-empty" class="fc-empty" style="display:none">Inga kort ännu — lägg till från informationssidan eller klicka på + Nytt kort!</div>
+</div>
+
+<!-- PAGE 3: ÖVNING -->
+<div class="page" id="page-ovning">
+  <h1 class="page-title">Övningsfrågor</h1>
+  <p class="page-sub">Svara med egna ord. Du behöver 80% rätt — lycka till!</p>
+  <div class="score-bar">
+    <span class="score-label">Din poäng</span>
+    <div class="score-track"><div class="score-fill" id="q-fill" style="width:0%"></div></div>
+    <span class="score-num" id="q-score-txt">–</span>
+  </div>
+  <div id="q-area-wrap"></div>
+  <div id="q-empty" class="no-questions">Lägg till övningsfrågor — klicka på + Nytt kort i Flashcard-sidan och välj typ "Övningsfråga"!</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-section">
+  <div class="modal">
+    <h2>Nytt avsnitt</h2>
+    <label>Ämnesnamn</label>
+    <input type="text" id="sec-name" placeholder="t.ex. Franska revolutionen">
+    <label>Kategori / färg</label>
+    <select id="sec-cat">
+      <option value="red">Röd (viktigt)</option>
+      <option value="green">Grön</option>
+      <option value="yellow">Gul (extra)</option>
+    </select>
+    <div id="subsections-inputs">
+      <label>Underavsnitt 1 — titel</label>
+      <input type="text" class="sub-title" placeholder="t.ex. Orsaker">
+      <label>Underavsnitt 1 — innehåll</label>
+      <textarea class="sub-content" placeholder="Skriv fakta här..."></textarea>
+    </div>
+    <button class="fc-btn secondary" onclick="addSubInput()" style="margin-bottom:0.75rem;font-size:0.85rem">+ Fler underavsnitt</button>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-section')">Avbryt</button>
+      <button class="btn-save" onclick="saveSection()">Spara</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-card">
+  <div class="modal">
+    <h2>Nytt kort</h2>
+    <label>Typ</label>
+    <select id="card-type">
+      <option value="flash">Flashcard</option>
+      <option value="q">Övningsfråga</option>
+    </select>
+    <label>Ämne / kategori</label>
+    <input type="text" id="card-topic" placeholder="t.ex. Franska revolutionen">
+    <label>Fråga / framsida</label>
+    <input type="text" id="card-q" placeholder="Vad...? När...? Varför...?">
+    <label>Svar / baksida</label>
+    <textarea id="card-a" placeholder="Svaret..."></textarea>
+    <div id="card-hints-wrap" style="display:none">
+      <label>Liten ledtråd</label>
+      <input type="text" id="card-hint1" placeholder="En liten ledtråd...">
+      <label>Stor ledtråd</label>
+      <input type="text" id="card-hint2" placeholder="En mer detaljerad ledtråd...">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-card')">Avbryt</button>
+      <button class="btn-save" onclick="saveCard()">Spara</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js" defer></script>
+</body>
+</html>
